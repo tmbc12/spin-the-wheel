@@ -1,13 +1,19 @@
 const sectors = [
-  { color: "#FFBC03", text: "#333333", label: "Sweets" },
-  { color: "#FF5A10", text: "#333333", label: "Prize draw" },
-  { color: "#FFBC03", text: "#333333", label: "Sweets" },
-  { color: "#FF5A10", text: "#333333", label: "Prize draw" },
-  { color: "#FFBC03", text: "#333333", label: "Sweets + Prize draw" },
-  { color: "#FF5A10", text: "#333333", label: "You lose" },
-  { color: "#FFBC03", text: "#333333", label: "Prize draw" },
-  { color: "#FF5A10", text: "#333333", label: "Sweets" },
+  { color: "#FFBC03", text: "#333333", label: "Maritozzi" },
+  { color: "#FF5A10", text: "#333333", label: "Extra Luck!" },
+  { color: "#FFBC03", text: "#333333", label: "Babah Rum" },
+  { color: "#FF5A10", text: "#333333", label: "So Close" },
+  { color: "#FFBC03", text: "#333333", label: "Brûlée Halwa" },
+  { color: "#FF5A10", text: "#333333", label: "Next Time!" },
+  { color: "#FFBC03", text: "#333333", label: "Pain Perdu" },
+  { color: "#FF5A10", text: "#333333", label: "Better Luck" },
+  { color: "#FFBC03", text: "#333333", label: "Gulab Nut" },
+  { color: "#FF5A10", text: "#333333", label: "Keep Spinning!" },
 ];
+
+let dishWins = 0;
+let spinCount = 0;
+let dishWinTimer = 0;
 
 const events = {
   listeners: {},
@@ -61,7 +67,6 @@ function drawSector(sector, i) {
   ctx.fillStyle = sector.text;
   ctx.font = "bold 30px 'Lato', sans-serif";
   ctx.fillText(sector.label, rad - 10, 10);
-  //
 
   ctx.restore();
 }
@@ -85,7 +90,15 @@ function frame() {
   }
 
   angVel *= friction; // Decrement velocity by friction
-  if (angVel < 0.002) angVel = 0; // Bring to stop
+  if ((angVel < 0.006 && dishWins >= 5) || (angVel < 0.006 && dishWinTimer > 1 )){
+    while(spinEl.style.background === 'rgb(255, 90, 16)') {
+      angVel = 0;
+      return
+    }
+  } else if(angVel < 0.006) {
+    angVel = 0
+  }
+    // Bring to stop
   ang += angVel; // Update angle
   ang %= TAU; // Normalize angle
   rotate();
@@ -103,11 +116,22 @@ function init() {
   spinEl.addEventListener("click", () => {
     if (!angVel) angVel = rand(0.25, 0.45);
     spinButtonClicked = true;
+    spinCount++;
+    if (dishWinTimer !== 0) dishWinTimer--;
   });
 }
 
 init();
 
 events.addListener("spinEnd", (sector) => {
+  if (spinEl.style.background === 'rgb(255, 188, 3)') {
+    dishWins++;
+    if (dishWinTimer === 0) dishWinTimer = Math.round(Math.random() * 12);
+  };
+  if (spinCount === 50) dishWins = 0;
+  
   console.log(`Woop! You won ${sector.label}`);
+  console.log('Dish win limit: ',dishWins);  
+  console.log('Spin Count: ',spinCount);  
+  console.log('Dishwin Timer: ',dishWinTimer);  
 });
