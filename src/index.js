@@ -13,7 +13,8 @@ const sectors = [
 
 let dishWins = 0;
 let spinCount = 0;
-let dishWinTimer = 0;
+let dishWinTimer = 8;
+let maxSpins = 50;
 
 const events = {
   listeners: {},
@@ -114,10 +115,16 @@ function init() {
   rotate(); // Initial rotation
   engine(); // Start engine
   spinEl.addEventListener("click", () => {
-    if (!angVel) angVel = rand(0.25, 0.45);
-    spinButtonClicked = true;
+    if (!angVel && spinCount < maxSpins) {
+      angVel = rand(0.25, 0.45)
+      spinButtonClicked = true;
     spinCount++;
-    if (dishWinTimer !== 0) dishWinTimer--;
+    } else if (spinCount >= maxSpins) {
+      console.log("Spin limit reached.");
+    };
+    if (dishWinTimer !== 0){
+       dishWinTimer--;
+    }
   });
 }
 
@@ -126,12 +133,10 @@ init();
 events.addListener("spinEnd", (sector) => {
   if (spinEl.style.background === 'rgb(255, 188, 3)') {
     dishWins++;
-    if (dishWinTimer === 0) dishWinTimer = Math.round(Math.random() * 12);
+    dishWinTimer = 10;
+    console.log(`Congrats! You won ${sector.label}`);
   };
-  if (spinCount === 50) dishWins = 0;
-  
-  console.log(`Woop! You won ${sector.label}`);
-  console.log('Dish win limit: ',dishWins);  
+  if (spinCount > 50) dishWins = 0;
+  console.log('Dishes Awarded: ',dishWins);  
   console.log('Spin Count: ',spinCount);  
-  console.log('Dishwin Timer: ',dishWinTimer);  
 });
