@@ -1,8 +1,8 @@
 const express = require("express");
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { registerUser, updateUser } = require("./controller");
-const connectDB = require("./connectDB");
+const { registerUser, updateUser } = require("./src/controller.js");
+const connectDB = require("./src/connectDB");
 
 dotenv.config();
 
