@@ -12,7 +12,8 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(cors({
-    origin: '*',
+    origin: 'https://spin-the-wheel-alpha.vercel.app/',
+    credentials: true
 }))
 
 app.post("/register", registerUser);
