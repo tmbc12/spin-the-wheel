@@ -1,19 +1,248 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <title>Welcome to Automation Anywhere's Spin the Wheel</title>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signup Form</title>
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap");
+      @import url("https://fonts.googleapis.com/css?family=Raleway|Montserrat");
+
+      body {
+        background: #e73f3f;
+        font-family: raleway;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+
+      div {
+        box-sizing: border-box;
+      }
+
+      .container {
+        width: 600px;
+        /* Increased width of the form */
+        background: #fff;
+        border-radius: 3px;
+        box-shadow: 0 1px 10px 0 #444;
+        padding: 30px;
+      }
+
+      .row {
+        padding: 10px;
+      }
+
+      .row#header {
+        padding-top: 30px;
+        padding-bottom: 20px;
+        text-align: center;
+      }
+
+      .row#header .icon {
+        font-size: 80px;
+        display: block;
+        color: #e73f3f;
+      }
+
+      .row#header h1,
+      .row#header p {
+        margin: 5px 0;
+        padding: 0;
+      }
+
+      .row#header h1 {
+        color: #e73f3f;
+        font-size: 25px;
+        font-weight: bolder;
+      }
+
+      .row#header p {
+        color: #aaa;
+      }
+
+      .row#form {
+        padding-bottom: 50px;
+      }
+
+      .row#form input[type="text"],
+      .row#form input[type="tel"],
+      .row#form input[type="email"] {
+        display: block;
+        width: 100%;
+        background: #eee;
+        border: none;
+        padding: 15px;
+        margin: 5px 0;
+        box-sizing: border-box;
+      }
+
+      .row#form input::-webkit-input-placeholder {
+        color: #bbb;
+        font-family: "raleway";
+      }
+
+      .row#form button {
+        display: block;
+        width: 100%;
+        padding: 15px;
+        border: none;
+        color: #fff;
+        background: #e73f3f;
+        border-radius: 3px;
+        margin: 10px 0;
+        font-weight: 800;
+        font-family: "montserrat";
+        font-size: 16px;
+      }
+
+      /* Popup Styles */
+      #popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        padding: 30px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      #popup button {
+        padding: 10px 20px;
+        background-color: #fff;
+        color: #e73f3f;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      #popup button:hover {
+        background-color: #e73f3f;
+        color: #fff;
+      }
     </style>
-    <link rel="stylesheet" href="src/styles.css" />
   </head>
 
   <body>
-    <div id="spin_the_wheel">
-      <canvas id="wheel" width="800" height="800"></canvas>
-      <div id="spin">SPIN</div>
+    <div class="container">
+      <div class="row" id="header">
+        <i class="icon ion-ios-people-outline"></i>
+        <h1>Signup Now</h1>
+        <p>Try your luck and win exciting prizes instantly!</p>
+      </div>
+      <!-- end header -->
+
+      <div class="row" id="form">
+        <form id="signupForm">
+          <input type="text" id="name" placeholder="Name" required />
+          <input
+            type="email"
+            id="email"
+            placeholder="Email Address (e.g., example@gmail.com)"
+            required
+          />
+          <input
+            type="tel"
+            id="phone"
+            placeholder="Phone Number"
+            required
+            pattern="^\d{10}$"
+          />
+          <button type="submit">Sign Up to Win</button>
+        </form>
+      </div>
+      <!-- end form -->
     </div>
-    <script defer src="src/index.js"></script>
+    <!-- end container -->
+
+    <!-- Popup for already registered -->
+    <div id="popup">
+      <p>You are already registered with this phone number!</p>
+      <button onclick="closePopup()">Close</button>
+    </div>
+
+    <script>
+      // Mock database of registered phone numbers
+      //   const registeredPhoneNumbers = ["1234567890", "0987654321"];
+
+      // Handle form submission
+      document
+        .getElementById("signupForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const name = document.getElementById("name").value;
+          const phoneNumber = document.getElementById("phone").value;
+          const email = document.getElementById("email").value;
+
+          // Combine the inputs
+          const formData = {
+            name,
+            email,
+            phoneNumber,
+          };
+
+          // Email validation using a regular expression
+          const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+
+          if (!emailPattern.test(email)) {
+            alert("Please enter a valid email address.");
+            return;
+          }
+
+          const user = await registerUser(formData);
+
+          // Check if the phone number is already registered
+          if (user.success) {
+            // Proceed with registration and redirect to the spin wheel page
+            window.location.href = "http://127.0.0.1:5500/form.html";
+          } else {
+            showPopup();
+          }
+        });
+
+      // To fetch name email and Phonenumber
+      async function registerUser(formData) {
+        try {
+          const response = await fetch("http://localhost:5000/register", {
+            method: "POST",
+            body: JSON.stringify(formData), // Make sure formData is defined earlier
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          const user = await response.json(); // Assuming response is JSON
+
+          // Check if the user registration was successful
+          if (response.ok) {
+            // Store the user email in session storage
+            localStorage.setItem("userEmail", user.user.email); // Assuming `user.email` is returned by the API
+          } else {
+            console.log(
+              "Error registering user:",
+              user.message || "Unknown error"
+            );
+          }
+          return user;
+        } catch (error) {
+          console.log(error);
+        }
+      }
+
+      // Show popup
+      function showPopup() {
+        document.getElementById("popup").style.display = "block";
+      }
+
+      // Close popup
+      function closePopup() {
+        document.getElementById("popup").style.display = "none";
+      }
+    </script>
   </body>
 </html>

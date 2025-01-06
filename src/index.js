@@ -1,20 +1,20 @@
 const sectors = [
-  { color: "#FFBC03", text: "#333333", label: "Maritozzi" },
-  { color: "#FF5A10", text: "#333333", label: "Extra Luck!" },
-  { color: "#FFBC03", text: "#333333", label: "Babah Rum" },
-  { color: "#FF5A10", text: "#333333", label: "So Close" },
-  { color: "#FFBC03", text: "#333333", label: "Brûlée Halwa" },
-  { color: "#FF5A10", text: "#333333", label: "Next Time!" },
-  { color: "#FFBC03", text: "#333333", label: "Pain Perdu" },
-  { color: "#FF5A10", text: "#333333", label: "Better Luck" },
-  { color: "#FFBC03", text: "#333333", label: "Gulab Nut" },
-  { color: "#FF5A10", text: "#333333", label: "Keep Spinning!" },
+  { color: "#FFBC03", text: "#333333", label: "Herb & Garlic Rice" },
+  { color: "#FF5A10", text: "#333333", label: "Maritozzi" },
+  { color: "#FFBC03", text: "#333333", label: "Mezze Platter 2.0" },
+  { color: "#FF5A10", text: "#333333", label: "Babah Rum" },
+  { color: "#FFBC03", text: "#333333", label: "Nasi Lunch Box" },
+  { color: "#FF5A10", text: "#333333", label: "Brûlée Halwa!" },
+  { color: "#FFBC03", text: "#333333", label: "⁠Malaysian Fried Rice" },
+  { color: "#FF5A10", text: "#333333", label: "Pain Perdu" },
+  { color: "#FFBC03", text: "#333333", label: "⁠Pondicherry Macaroni" },
+  { color: "#FF5A10", text: "#333333", label: "Gulab Nut" },
 ];
 
 let dishWins = 0;
 let spinCount = 0;
-let dishWinTimer = 8;
-let maxSpins = 50;
+let dishWinTimer = localStorage.getItem("dishWinTimer") || 8;
+console.log(dishWinTimer);
 
 const events = {
   listeners: {},
@@ -66,7 +66,7 @@ function drawSector(sector, i) {
   ctx.rotate(ang + arc / 2);
   ctx.textAlign = "right";
   ctx.fillStyle = sector.text;
-  ctx.font = "bold 30px 'Lato', sans-serif";
+  ctx.font = "bold 20px 'Lato', sans-serif";
   ctx.fillText(sector.label, rad - 10, 10);
 
   ctx.restore();
@@ -76,7 +76,13 @@ function rotate() {
   const sector = sectors[getIndex()];
   ctx.canvas.style.transform = `rotate(${ang - PI / 2}rad)`;
 
-  spinEl.textContent = !angVel ? "SPIN" : sector.label;
+  // Show the label only while spinning or stopped, but not ready for the next spin
+  if (angVel === 0 && !spinButtonClicked) {
+    spinEl.textContent = "SPIN"; // Show "SPIN" when ready for a new spin
+  } else {
+    spinEl.textContent = sector.label; // Show the current sector label during spinning or stopped
+  }
+
   spinEl.style.background = sector.color;
   spinEl.style.color = sector.text;
 }
@@ -91,15 +97,19 @@ function frame() {
   }
 
   angVel *= friction; // Decrement velocity by friction
-  if ((angVel < 0.006 && dishWins >= 5) || (angVel < 0.006 && dishWinTimer > 1 )){
-    while(spinEl.style.background === 'rgb(255, 90, 16)') {
+  if (
+    (angVel < 0.006 && dishWins >= 5) ||
+    (angVel < 0.006 && dishWinTimer > 1)
+  ) {
+    while (spinEl.style.background === "rgb(255, 90, 16)") {
       angVel = 0;
-      return
+      return;
     }
-  } else if(angVel < 0.006) {
-    angVel = 0
+  } else if (angVel < 0.006) {
+    angVel = 0;
+    return;
   }
-    // Bring to stop
+  // Bring to stop
   ang += angVel; // Update angle
   ang %= TAU; // Normalize angle
   rotate();
@@ -115,28 +125,95 @@ function init() {
   rotate(); // Initial rotation
   engine(); // Start engine
   spinEl.addEventListener("click", () => {
-    if (!angVel && spinCount < maxSpins) {
-      angVel = rand(0.25, 0.45)
-      spinButtonClicked = true;
-    spinCount++;
-    } else if (spinCount >= maxSpins) {
-      console.log("Spin limit reached.");
-    };
-    if (dishWinTimer !== 0){
-       dishWinTimer--;
+    if (!angVel && !spinButtonClicked) {
+      angVel = rand(0.25, 0.45); // Set angular velocity
+      spinButtonClicked = true; // Mark button as clicked
+      spinCount++;
+      spinEl.textContent = ""; // Clear text while spinning
+    } 
+
+    if (dishWinTimer !== 0) {
+      dishWinTimer--;
     }
   });
 }
 
+// Show popup
+function showPopup() {
+  document.getElementById("wrapper").style.display = "flex";
+}
+
+// Close popup
+function closePopup() {
+  document.getElementById("popup").style.display = "none";
+}
+
+async function updateUser(dishName) {
+  const email = localStorage.getItem("userEmail");
+
+  const data = {
+    email,
+    dishName,
+    isWin: true,
+  }
+  try {
+    const response = await fetch("http://localhost:5000/update", {
+      method: "POST",
+      body: JSON.stringify(data), // Make sure formData is defined earlier
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const user = await response.json(); // Assuming response is JSON
+    return user;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 init();
 
-events.addListener("spinEnd", (sector) => {
+events.addListener("spinEnd", async(sector) => {
   if (spinEl.style.background === 'rgb(255, 188, 3)') {
-    dishWins++;
-    dishWinTimer = 10;
-    console.log(`Congrats! You won ${sector.label}`);
-  };
-  if (spinCount > 50) dishWins = 0;
-  console.log('Dishes Awarded: ',dishWins);  
-  console.log('Spin Count: ',spinCount);  
+  dishWins++;
+  dishWinTimer = 10;
+  }
+  localStorage.setItem("dishWinTimer", dishWinTimer);
+  document.getElementById("popup-text").textContent = `Congratulation! You won ${sector.label}`;
+  console.log(`Congrats! You won ${sector.label}`);
+  showPopup();
+  await updateUser(sector.label);
+  // if (spinCount > 50) dishWins = 0;
+  console.log("Dishes Awarded: ", dishWins);
+  console.log("Spin Count: ", spinCount);
 });
+
+for(i=0; i<100; i++) {
+  // Random rotation
+  var randomRotation = Math.floor(Math.random() * 360);
+    // Random Scale
+  var randomScale = Math.random() * 1;
+  // Random width & height between 0 and viewport
+  var randomWidth = Math.floor(Math.random() * Math.max(document.documentElement.clientWidth, window.innerWidth || 0));
+  var randomHeight =  Math.floor(Math.random() * Math.max(document.documentElement.clientHeight, window.innerHeight || 500));
+  
+  // Random animation-delay
+  var randomAnimationDelay = Math.floor(Math.random() * 15);
+
+  // Random colors
+  var colors = ['#0CD977', '#FF1C1C', '#FF93DE', '#5767ED', '#FFC61C', '#8497B0']
+  var randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+  // Create confetti piece
+  var confetti = document.createElement('div');
+  confetti.className = 'confetti';
+  confetti.style.top=randomHeight + 'px';
+  confetti.style.right=randomWidth + 'px';
+  confetti.style.backgroundColor=randomColor;
+  // confetti.style.transform='scale(' + randomScale + ')';
+  confetti.style.obacity=randomScale;
+  confetti.style.transform='skew(15deg) rotate(' + randomRotation + 'deg)';
+  confetti.style.animationDelay=randomAnimationDelay + 's';
+  document.getElementById("confetti-wrapper").appendChild(confetti);
+}
