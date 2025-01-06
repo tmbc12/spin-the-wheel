@@ -157,7 +157,7 @@ async function updateUser(dishName) {
     isWin: true,
   }
   try {
-    const response = await fetch("http://localhost:5000/update", {
+    const response = await fetch("https://momo-wheel-spinner.vercel.app/update", {
       method: "POST",
       body: JSON.stringify(data), // Make sure formData is defined earlier
       headers: {
