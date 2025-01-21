@@ -2,7 +2,7 @@ const User = require("./modal");
 
 // Register user
 const registerUser = async (req, res) => {
-    const { name, email, phoneNumber } = req.body;
+    const { name, phoneNumber } = req.body;
 
     try {
         const existUser = await User.findOne({ phoneNumber });
@@ -15,7 +15,6 @@ const registerUser = async (req, res) => {
 
         const user = await User.create({
             name,
-            email,
             phoneNumber,
         });
 
@@ -36,11 +35,11 @@ const registerUser = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-    const { email, dishName, isWin } = req.body;
+    const { number, dishName, isWin } = req.body;
     
     try {
         const user = await User.findOneAndUpdate(
-            { email },
+            { phoneNumber: number },
             { dishName, isWin },
             { new: true }
         );

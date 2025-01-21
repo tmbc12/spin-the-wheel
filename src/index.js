@@ -149,15 +149,16 @@ function closePopup() {
 }
 
 async function updateUser(dishName) {
-  const email = localStorage.getItem("userEmail");
+  const number = localStorage.getItem("userPhoneNumber");
+  console.log(number);
 
   const data = {
-    email,
+    number,
     dishName,
     isWin: true,
   }
   try {
-    const response = await fetch("https://tracker-server-dev-main.vercel.app/update", {
+    const response = await fetch("https://momo-wheel-spinner.vercel.app/update", {
       method: "POST",
       body: JSON.stringify(data), // Make sure formData is defined earlier
       headers: {
